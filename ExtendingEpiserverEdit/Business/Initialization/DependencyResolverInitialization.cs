@@ -5,6 +5,8 @@ using EPiServer.ServiceLocation;
 using ExtendingEpiserverEdit.Business.Rendering;
 using EPiServer.Web.Mvc;
 using EPiServer.Web.Mvc.Html;
+using ExtendingEpiserverEdit.Business.DependencyResolution;
+using System.Web.Http;
 
 namespace ExtendingEpiserverEdit.Business.Initialization
 {
@@ -21,6 +23,19 @@ namespace ExtendingEpiserverEdit.Business.Initialization
                 context.Services.AddTransient<IContentRenderer, ErrorHandlingContentRenderer>()
                     .AddTransient<ContentAreaRenderer, AlloyContentAreaRenderer>();
             };
+
+            var container = context.StructureMap();
+
+            // Scan for registries
+            container.Configure(config => config.Scan(
+                scanner =>
+                {
+                    scanner.LookForRegistries();
+                    scanner.TheCallingAssembly();
+                    scanner.WithDefaultConventions();
+                }));
+
+            GlobalConfiguration.Configuration.DependencyResolver = new StructureMapWebApiDependencyResolver(container);
         }
 
         public void Initialize(InitializationEngine context)
